@@ -40,7 +40,9 @@ npm i @angular/core
 
 ## Setup
 Upload version_info.json and app binary files on your server.
+
 /res/version_info.json
+
 /res/builds/application.apk
 
 
