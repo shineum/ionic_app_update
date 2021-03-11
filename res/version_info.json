@@ -1,0 +1,7 @@
+{
+    "app": {
+            "version": "0.0.1",
+            "path": "builds",
+            "file": "application.apk"
+    }
+}
