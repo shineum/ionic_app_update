@@ -59,9 +59,6 @@ import VersionChecker from './VersionChecker';
     });
 
     // optional - loading start
-    this.setState({
-      isLoading: true
-    });
 
     // check update
     tVersionChecker.checkUpdate()
@@ -81,9 +78,6 @@ import VersionChecker from './VersionChecker';
     )
     .finally(() => {
       // optional - loading end
-      this.setState({
-        isLoading: false
-      });
     });
   }
 ```
