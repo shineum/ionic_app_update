@@ -2,13 +2,21 @@
 ionic android version manage code
 
 Tested environment:
+
 "ionic": "6.12.3"
+
 "@angular/core": "^11.2.5"
+
 "cordova-plugin-advanced-http": "^3.1.0"
+
 "@ionic-native/http": "^5.31.1"
+
 "cordova-plugin-file": "^6.0.2"
+
 "@ionic-native/file": "^5.31.1"
+
 "com-darryncampbell-cordova-plugin-intent": "^2.0.0"
+
 "@ionic-native/web-intent": "^5.31.1"
 
 
