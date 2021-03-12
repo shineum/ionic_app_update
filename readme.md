@@ -73,7 +73,7 @@ import VersionChecker from './VersionChecker';
         }
       }, 
       (err) => {
-        alert("Network Error: " + err.status + "\n" + err.error);
+        alert("Error: " + err.status + "\n" + err.error);
       }
     )
     .finally(() => {
