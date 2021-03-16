@@ -58,24 +58,55 @@ import VersionChecker from './VersionChecker';
       version: "0.0.1"                                          // read current app version
     });
 
-    // optional - loading start
+    /////////////////////////////////////////////
+    // simple version of example
+    /////////////////////////////////////////////
+    tVersionChecker.checkUpdate()
+    .then((pHasUpdate) => {
+      if (pHasUpdate) {
+        tVersionChecker.downloadFile()
+        .then(() => {
+          tVersionChecker.runUpdate();
+        });
+      }
+    });
 
+    /////////////////////////////////////////////
+    // complex version of example
+    /////////////////////////////////////////////    
+    // optional - loading start
     // check update
     tVersionChecker.checkUpdate()
-    .then(
-      (pHasUpdate) => {
-        if (pHasUpdate) {
-          if (window.confirm("There is a new version application.\nDo you want to install an update?")) {
-            tVersionChecker.runUpdate();
+    .then((pHasUpdate) => {
+        return new Promise<void>((pfResolved)=>{
+          if (pHasUpdate) {
+            if (window.confirm("There is a newer version of application.\nDo you want to download it?")) {
+              tVersionChecker.downloadFile()
+              .then(() => {
+                if (window.confirm("A latest version of application is ready.\nDo you want to install it now?")) {
+                  tVersionChecker.runUpdate();
+                }
+              })
+              .catch((err) => {
+                alert("Download Error: " + err.status + "\n" + err.error);
+              })
+              .finally(() => {
+                pfResolved();
+              });
+            } else {
+              // will not download
+              pfResolved();
+            }
+          } else {
+            alert("No Update!");
+            pfResolved();
           }
-        } else {
-          alert("No Update!");
-        }
-      }, 
-      (err) => {
-        alert("Error: " + err.status + "\n" + err.error);
+        });
       }
     )
+    .catch((err) => {
+      alert("Version Check Error: " + err.status + "\n" + err.error);
+    })
     .finally(() => {
       // optional - loading end
     });
