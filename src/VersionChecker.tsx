@@ -71,7 +71,6 @@ export default class VersionChecker {
             HTTP.sendRequest(this.versionCheckUrl, {method: "get", headers: {}})
             .then(res => JSON.parse(res.data))
             .then(pData => {
-                alert(JSON.stringify(pData));
                 let tPromises = [];
                 tPromises.push( new Promise<any>( (pfResolved) => { pfResolved(pData); }) );
                 tPromises.push( new Promise<boolean>( (pfResolved) => { pfResolved(this._checkHasUpdate(pData.app)); }) );
