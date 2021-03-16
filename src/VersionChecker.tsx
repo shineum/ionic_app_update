@@ -8,12 +8,25 @@ export default class VersionChecker {
     filePath: string;
     versionObj: {[key: string]: any};
     versionCheckUrl: string;
+    downloadFileReady: boolean;
+    downloadFilePath: string;
+    downloadFileName: string;
 
     constructor(pVersionObj: {[key: string]: any}) {
         this.versionObj = pVersionObj;
         this.versionCheckUrl = pVersionObj.url;
+        this.downloadFileReady = false;
+        this.downloadFilePath = "";
+        this.downloadFileName = "";
         this.file = new File();
         this.fileDir = this.file.externalCacheDirectory;
+        this.filePath = "";
+    }
+
+    _resetDownloadData() {
+        this.downloadFileReady = false;
+        this.downloadFilePath = "";
+        this.downloadFileName = "";
         this.filePath = "";
     }
 
@@ -66,58 +79,60 @@ export default class VersionChecker {
         this._runUpdate(this.filePath);
     }
 
+    downloadFile() {
+        return new Promise<void>((pfResolved, pfRejected) => {
+            new Promise<void>((pfResolved, pfRejected) => { 
+                if (this.downloadFileReady) {
+                    pfResolved();
+                } else {
+                    let tmpArr = this.versionCheckUrl.split("/");
+                    tmpArr.pop();
+                    tmpArr.push(this.downloadFilePath);
+                    tmpArr.push(this.downloadFileName);
+
+                    let tBinaryUrl = tmpArr.join("/");
+                    this._downloadFileAsync(tBinaryUrl, this.downloadFileName).then( pfResolved, pfRejected );
+                }
+            })
+            .then( pfResolved, pfRejected );            
+        });
+    }
+
     checkUpdate() {
+        this._resetDownloadData();
         return new Promise<boolean>((pfResolved, pfRejected) => {
             HTTP.sendRequest(this.versionCheckUrl, {method: "get", headers: {}})
             .then(res => JSON.parse(res.data))
             .then(pData => {
                 let tPromises = [];
-                tPromises.push( new Promise<any>( (pfResolved) => { pfResolved(pData); }) );
                 tPromises.push( new Promise<boolean>( (pfResolved) => { pfResolved(this._checkHasUpdate(pData.app)); }) );
                 tPromises.push(
                     new Promise<boolean>( (pfResolved) => {
                         this._checkHasFileAsync(pData.app.file).then( () => { pfResolved(true); }, () => { pfResolved(false); });
                     })
                 );
+                if (pData.app) {
+                    this.downloadFilePath = pData.app.path;
+                    this.downloadFileName = pData.app.file;
+                    this.filePath = this._getFilePath(this.downloadFileName);
+                }        
                 return Promise.all(tPromises);
             })
             .then(pParams => {
                 let tPromises = [];
-                tPromises.push( new Promise<any>( (pfResolved) => { pfResolved(pParams[0]); }) );
-                tPromises.push( new Promise<boolean>( (pfResolved) => { pfResolved(pParams[1]); }) );
-
-                let tData = pParams[0];
-                let tFileName = tData.app.file;
-                if (pParams[1] && !pParams[2]) {
-                    tPromises.push( new Promise<void>( (pfResolved) => { 
-                        let tPath = tData.app.path;
-                        let tmpArr = this.versionCheckUrl.split("/");
-                        tmpArr.pop();
-                        tmpArr.push(tPath);
-                        tmpArr.push(tFileName);
-
-                        let tBinaryUrl = tmpArr.join("/");
-                        this._downloadFileAsync(tBinaryUrl, tFileName).then( () => { pfResolved(); });
-                    }) );
-                } else if (!pParams[1] && pParams[2]) {
-                    tPromises.push( new Promise<void>( (pfResolved) => {
-                        this._deleteFileAsync(tFileName).then( () => { pfResolved();} );
-                    }) );
+                tPromises.push( new Promise<boolean>( (pfResolved) => { pfResolved(pParams[0]); }) );
+                if (pParams[1]) {
+                    this.downloadFileReady = true;
+                    if (!pParams[0]) {
+                        tPromises.push( new Promise<boolean>( (pfResolved) => {
+                            this._deleteFileAsync(this.downloadFileName).then( () => { pfResolved(true);} );
+                        }) );
+                    }
                 }
                 return Promise.all(tPromises);
             })
-            .then(pParams => {
-                if (pParams[1]) {
-                    let tData = pParams[0];
-                    this.filePath = this._getFilePath(tData.app.file);
-                    pfResolved(true);
-                } else {
-                    pfResolved(false);
-                }
-            })
-            .catch((err) => {
-                pfRejected(err);
-            });
+            .then(pParams => pfResolved(pParams[0]))
+            .catch(err => pfRejected(err));
         });
     }
 }
